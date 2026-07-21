@@ -1,7 +1,7 @@
 {
   "domain": "joyful_ble_positioning",
   "name": "Joyful BLE Positioning",
-  "codeowners": ["@joyfulhouse"],
+  "codeowners": ["@btli"],
   "config_flow": true,
   "dependencies": ["bluetooth", "websocket_api"],
   "documentation": "https://github.com/joyfulhouse/joyful-ble-positioning",
