@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -17,6 +18,7 @@ from custom_components.joyful_ble_positioning.const import (
 from custom_components.joyful_ble_positioning.matcher import match_tracker
 from custom_components.joyful_ble_positioning.model import (
     SubscriptionValidationError,
+    TrackerKind,
     TrackerSpec,
     parse_subscription_spec,
 )
@@ -101,7 +103,7 @@ def _ibeacon_payload(
 
 
 @pytest.mark.parametrize("kind", ["static-mac", "resolved-address"])
-def test_parse_subscription_canonicalizes_mac_identity(kind: str) -> None:
+def test_parse_subscription_canonicalizes_mac_identity(kind: TrackerKind) -> None:
     spec = parse_subscription_spec(
         _request(trackers=[_tracker(kind=kind, identity="aa:bb:cc:dd:ee:ff")])
     )
@@ -190,15 +192,11 @@ def test_parse_subscription_rejects_out_of_range_or_noncanonical_ibeacon_numbers
     identity: str,
 ) -> None:
     with pytest.raises(SubscriptionValidationError, match="identity"):
-        parse_subscription_spec(
-            _request(trackers=[_tracker(kind="ibeacon", identity=identity)])
-        )
+        parse_subscription_spec(_request(trackers=[_tracker(kind="ibeacon", identity=identity)]))
 
 
 def test_parse_subscription_rejects_over_limit_lists() -> None:
-    trackers = [
-        _tracker(tracker_id=str(UUID(int=index + 1))) for index in range(MAX_TRACKERS + 1)
-    ]
+    trackers = [_tracker(tracker_id=str(UUID(int=index + 1))) for index in range(MAX_TRACKERS + 1)]
     sources = [f"scanner-{index}" for index in range(MAX_SCANNER_SOURCES + 1)]
 
     with pytest.raises(SubscriptionValidationError, match="tracker count"):
@@ -270,7 +268,7 @@ def test_parse_subscription_validation_errors_do_not_echo_identity_values() -> N
 
 
 @pytest.mark.parametrize("kind", ["static-mac", "resolved-address"])
-def test_match_tracker_matches_exact_address_kinds(kind: str) -> None:
+def test_match_tracker_matches_exact_address_kinds(kind: TrackerKind) -> None:
     tracker = parse_subscription_spec(
         _request(trackers=[_tracker(kind=kind, identity="aa:bb:cc:dd:ee:ff")])
     ).trackers[0]
@@ -288,11 +286,7 @@ def test_match_tracker_matches_exact_address_kinds(kind: str) -> None:
 
 def test_match_tracker_matches_exact_apple_ibeacon_payload() -> None:
     tracker = parse_subscription_spec(
-        _request(
-            trackers=[
-                _tracker(kind="ibeacon", identity=f"{IBEACON_UUID.upper()}/1/27")
-            ]
-        )
+        _request(trackers=[_tracker(kind="ibeacon", identity=f"{IBEACON_UUID.upper()}/1/27")])
     ).trackers[0]
     address = "AA:BB:CC:DD:EE:FF"
     cache = {
@@ -320,11 +314,7 @@ def test_match_tracker_matches_exact_apple_ibeacon_payload() -> None:
         {0x004C: _ibeacon_payload() + b"\x00"},
         {0xFFFF: _ibeacon_payload()},
         {0x004C: b"\x02\x14" + _ibeacon_payload()[2:]},
-        {
-            0x004C: _ibeacon_payload(
-                uuid="208406ac-1755-48d4-9157-8ee7e3e5054a"
-            )
-        },
+        {0x004C: _ibeacon_payload(uuid="208406ac-1755-48d4-9157-8ee7e3e5054a")},
         {0x004C: _ibeacon_payload(major=2)},
         {0x004C: _ibeacon_payload(minor=28)},
     ],
@@ -352,12 +342,8 @@ def test_match_tracker_chooses_newest_address_for_rotating_ibeacon() -> None:
     ).trackers[0]
     payload = {0x004C: _ibeacon_payload()}
     cache = {
-        "AA:00:00:00:00:01": _cache_entry(
-            "AA:00:00:00:00:01", manufacturer_data=payload, rssi=-30
-        ),
-        "AA:00:00:00:00:02": _cache_entry(
-            "AA:00:00:00:00:02", manufacturer_data=payload, rssi=-80
-        ),
+        "AA:00:00:00:00:01": _cache_entry("AA:00:00:00:00:01", manufacturer_data=payload, rssi=-30),
+        "AA:00:00:00:00:02": _cache_entry("AA:00:00:00:00:02", manufacturer_data=payload, rssi=-80),
     }
 
     result = match_tracker(
@@ -376,12 +362,8 @@ def test_match_tracker_uses_stronger_rssi_when_timestamps_tie() -> None:
     ).trackers[0]
     payload = {0x004C: _ibeacon_payload()}
     cache = {
-        "AA:00:00:00:00:01": _cache_entry(
-            "AA:00:00:00:00:01", manufacturer_data=payload, rssi=-70
-        ),
-        "AA:00:00:00:00:02": _cache_entry(
-            "AA:00:00:00:00:02", manufacturer_data=payload, rssi=-40
-        ),
+        "AA:00:00:00:00:01": _cache_entry("AA:00:00:00:00:01", manufacturer_data=payload, rssi=-70),
+        "AA:00:00:00:00:02": _cache_entry("AA:00:00:00:00:02", manufacturer_data=payload, rssi=-40),
     }
 
     result = match_tracker(
@@ -424,3 +406,45 @@ def test_match_tracker_ignores_cache_entries_without_a_timestamp() -> None:
     address = "AA:BB:CC:DD:EE:FF"
 
     assert match_tracker(tracker, {address: _cache_entry(address)}, {}) is None
+
+
+def test_match_tracker_ignores_malformed_timestamps_independent_of_cache_order() -> None:
+    tracker = parse_subscription_spec(
+        _request(trackers=[_tracker(kind="ibeacon", identity=f"{IBEACON_UUID}/1/27")])
+    ).trackers[0]
+    payload = {0x004C: _ibeacon_payload()}
+    valid = "AA:00:00:00:00:05"
+    addresses = [
+        valid,
+        "AA:00:00:00:00:01",
+        "AA:00:00:00:00:02",
+        "AA:00:00:00:00:03",
+        "AA:00:00:00:00:04",
+    ]
+    entries = {
+        address: _cache_entry(address, manufacturer_data=payload, rssi=-20) for address in addresses
+    }
+    timestamps = cast(
+        Mapping[str, float],
+        {
+            valid: 0,
+            "AA:00:00:00:00:01": True,
+            "AA:00:00:00:00:02": "999",
+            "AA:00:00:00:00:03": float("nan"),
+            "AA:00:00:00:00:04": float("inf"),
+        },
+    )
+
+    forward = match_tracker(tracker, entries, timestamps)
+    reverse = match_tracker(
+        tracker,
+        dict(reversed(entries.items())),
+        dict(reversed(tuple(timestamps.items()))),
+    )
+
+    assert forward is not None
+    assert reverse is not None
+    assert forward.address == valid
+    assert reverse.address == valid
+    assert forward.monotonic_timestamp == 0.0
+    assert type(forward.monotonic_timestamp) is float

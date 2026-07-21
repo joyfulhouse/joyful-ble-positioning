@@ -107,9 +107,7 @@ def _parse_tracker(value: object) -> TrackerSpec:
 
     kind = cast(TrackerKind, kind_value)
     identity = (
-        _canonical_ibeacon(identity_value)
-        if kind == "ibeacon"
-        else _canonical_mac(identity_value)
+        _canonical_ibeacon(identity_value) if kind == "ibeacon" else _canonical_mac(identity_value)
     )
     return TrackerSpec(tracker_id=tracker_id, kind=kind, identity=identity)
 

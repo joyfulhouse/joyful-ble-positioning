@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from uuid import UUID
@@ -29,11 +30,7 @@ class MatchResult:
 
 def _matches_ibeacon(tracker: TrackerSpec, advertisement: AdvertisementData) -> bool:
     payload = advertisement.manufacturer_data.get(_APPLE_COMPANY_ID)
-    if (
-        payload is None
-        or len(payload) != _IBEACON_PAYLOAD_LENGTH
-        or payload[:2] != _IBEACON_PREFIX
-    ):
+    if payload is None or len(payload) != _IBEACON_PAYLOAD_LENGTH or payload[:2] != _IBEACON_PREFIX:
         return False
 
     uuid_text, major_text, minor_text = tracker.identity.split("/")
@@ -54,6 +51,16 @@ def _matches(
     return address.upper() == tracker.identity
 
 
+def _finite_timestamp(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        timestamp = float(value)
+    except OverflowError:
+        return None
+    return timestamp if math.isfinite(timestamp) else None
+
+
 def match_tracker(
     tracker: TrackerSpec,
     advertisements: Mapping[str, tuple[BLEDevice, AdvertisementData]],
@@ -62,7 +69,7 @@ def match_tracker(
     """Return the deterministic freshest cache match for one tracker."""
     matches: list[MatchResult] = []
     for address, (_device, advertisement) in advertisements.items():
-        timestamp = timestamps.get(address)
+        timestamp = _finite_timestamp(timestamps.get(address))
         if timestamp is None or not _matches(tracker, address, advertisement):
             continue
         matches.append(
