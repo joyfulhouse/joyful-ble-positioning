@@ -1,0 +1,13 @@
+{
+  "domain": "joyful_ble_positioning",
+  "name": "Joyful BLE Positioning",
+  "codeowners": ["@joyfulhouse"],
+  "config_flow": true,
+  "dependencies": ["bluetooth", "websocket_api"],
+  "documentation": "https://github.com/joyfulhouse/joyful-ble-positioning",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}

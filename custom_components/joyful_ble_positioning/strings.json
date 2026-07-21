@@ -1,0 +1,14 @@
+{
+  "title": "Joyful BLE Positioning",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Joyful BLE Positioning",
+        "description": "Enable the diagnostic BLE observation bridge."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only one Joyful BLE Positioning configuration is allowed."
+    }
+  }
+}
