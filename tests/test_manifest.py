@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 from pathlib import Path
 from typing import Any
 
 from homeassistant.const import Platform
+
+from custom_components import joyful_ble_positioning as integration
 
 ROOT = Path(__file__).parents[1]
 COMPONENT_DIR = ROOT / "custom_components" / "joyful_ble_positioning"
@@ -35,6 +38,23 @@ def test_manifest_declares_exact_integration_contract() -> None:
     assert manifest["iot_class"] == "calculated"
     assert manifest["config_flow"] is True
     assert manifest["requirements"] == []
+
+
+def test_manifest_key_order_matches_hassfest_contract() -> None:
+    """Hassfest requires domain/name first and every remaining key sorted."""
+    keys = list(_load_manifest())
+
+    assert keys[:2] == ["domain", "name"]
+    assert keys[2:] == sorted(keys[2:])
+
+
+def test_async_setup_is_declared_config_entry_only() -> None:
+    """The inert async_setup hook must explicitly reject YAML configuration."""
+    schema = integration.CONFIG_SCHEMA
+
+    assert schema.__module__ == "homeassistant.helpers.config_validation"
+    assert schema.__qualname__.startswith("_no_yaml_config_schema.<locals>.")
+    assert inspect.getclosurevars(schema).nonlocals["domain"] == "joyful_ble_positioning"
 
 
 def test_integration_has_no_home_assistant_platforms() -> None:

@@ -8,6 +8,7 @@ from typing import Any, cast
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
 
 from .const import (
@@ -22,6 +23,8 @@ from .runtime import (
     capability_check,
 )
 from .websocket import DomainState, websocket_subscribe_observations
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def _state(hass: HomeAssistant) -> DomainState:

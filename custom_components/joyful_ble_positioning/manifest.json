@@ -6,8 +6,8 @@
   "dependencies": ["bluetooth", "websocket_api"],
   "documentation": "https://github.com/joyfulhouse/joyful-ble-positioning",
   "integration_type": "service",
-  "issue_tracker": "https://github.com/joyfulhouse/joyful-ble-positioning/issues",
   "iot_class": "calculated",
+  "issue_tracker": "https://github.com/joyfulhouse/joyful-ble-positioning/issues",
   "requirements": [],
   "single_config_entry": true,
   "version": "0.1.0"
