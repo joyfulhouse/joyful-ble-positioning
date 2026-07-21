@@ -26,6 +26,9 @@ def test_manifest_declares_exact_integration_contract() -> None:
     assert manifest["domain"] == "joyful_ble_positioning"
     assert manifest["name"] == "Joyful BLE Positioning"
     assert manifest["version"] == "0.1.0"
+    assert manifest["issue_tracker"] == (
+        "https://github.com/joyfulhouse/joyful-ble-positioning/issues"
+    )
     assert manifest["dependencies"] == ["bluetooth", "websocket_api"]
     assert manifest["single_config_entry"] is True
     assert manifest["integration_type"] == "service"

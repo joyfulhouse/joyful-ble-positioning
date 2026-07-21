@@ -23,7 +23,8 @@ person safety, access control, emergency response, or automation-authoritative p
 
 ## Development
 
-The development environment requires Python 3.14 and [uv](https://docs.astral.sh/uv/).
+The development environment requires Python 3.14.2 or later within the Python 3.14 series and
+[uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync --locked
