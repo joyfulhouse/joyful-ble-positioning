@@ -13,8 +13,11 @@ The integration is deliberately narrow:
 - read-only toward Bluetooth scanners: it does not initiate discovery, connect to beacons, or
   change scanner settings.
 
-This repository currently contains the inert integration and singleton config-flow scaffold.
-The bounded admin observation subscription will be added in a later implementation task.
+When its singleton configuration entry is loaded, the integration exposes the admin-only
+`joyful_ble_positioning/subscribe_observations` WebSocket command. Each subscription accepts a
+strictly bounded tracker and scanner-source allowlist and emits only minimized, freshness-bounded
+RSSI observations. Unloading or reloading the entry immediately detaches the runtime and erases
+subscription identity state.
 
 ## Safety
 

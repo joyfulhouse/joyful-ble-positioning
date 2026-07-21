@@ -6,10 +6,10 @@ import asyncio
 import inspect
 import logging
 import math
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import Literal, TypedDict, cast, overload
+from typing import Any, Literal, TypedDict, cast, overload
 from uuid import UUID, uuid4
 
 import bluetooth_data_tools
@@ -31,6 +31,7 @@ _FUTURE_SKEW_SECONDS = 1.0
 type CurrentScannersApi = Callable[[HomeAssistant], list[BaseHaScanner]]
 type ScannerBySourceApi = Callable[[HomeAssistant, str], BaseHaScanner | None]
 type Sleep = Callable[[float], Awaitable[None]]
+type CreateBackgroundTask = Callable[[Coroutine[Any, Any, None], str], asyncio.Task[None]]
 
 
 class IncompatibleBluetoothApiError(RuntimeError):
@@ -224,7 +225,7 @@ class _PairState:
     emitted_state: Literal["observed", "stale"] | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class _Subscriber:
     spec: SubscriptionSpec
     callback: EventCallback
@@ -311,9 +312,11 @@ class BleObservationRuntime:
         hass: HomeAssistant,
         *,
         sleep: Sleep = asyncio.sleep,
+        create_background_task: CreateBackgroundTask | None = None,
     ) -> None:
         self._hass = hass
         self._sleep = sleep
+        self._create_background_task = create_background_task or hass.async_create_background_task
         self._subscriptions: dict[UUID, _Subscriber] = {}
         self._sampler_task: asyncio.Task[None] | None = None
         self._sampler_tasks: set[asyncio.Task[None]] = set()
@@ -390,7 +393,7 @@ class BleObservationRuntime:
             return
         sampler_coroutine = self._async_sampler_loop()
         try:
-            task = self._hass.async_create_background_task(
+            task = self._create_background_task(
                 sampler_coroutine,
                 "joyful_ble_positioning_sampler",
             )
@@ -431,6 +434,7 @@ class BleObservationRuntime:
     async def async_close(self) -> None:
         """Stop sampling, release slots, and erase all identity-bearing state."""
         self._closed = True
+        self._create_background_task = self._hass.async_create_background_task
         for token in tuple(self._subscriptions):
             self._cancel_subscription(token)
         tasks = tuple(self._sampler_tasks)
@@ -529,6 +533,7 @@ class BleObservationRuntime:
 
     def _fail_closed(self) -> None:
         self._closed = True
+        self._create_background_task = self._hass.async_create_background_task
         for token in tuple(self._subscriptions):
             self._cancel_subscription(token)
 

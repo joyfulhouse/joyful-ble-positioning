@@ -10,5 +10,11 @@
     "abort": {
       "single_instance_allowed": "Only one Joyful BLE Positioning configuration is allowed."
     }
+  },
+  "issues": {
+    "incompatible_bluetooth_api": {
+      "title": "BLE observation bridge is unavailable",
+      "description": "This Home Assistant version does not provide the required {missing_capability}. Update Home Assistant or remove this integration until a compatible version is available."
+    }
   }
 }

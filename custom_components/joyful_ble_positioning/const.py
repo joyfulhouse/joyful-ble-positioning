@@ -4,6 +4,8 @@ from typing import Final
 
 DOMAIN: Final = "joyful_ble_positioning"
 INTEGRATION_VERSION: Final = "0.1.0"
+INCOMPATIBLE_BLUETOOTH_API_ISSUE_ID: Final = "incompatible_bluetooth_api"
+REQUIRED_BLUETOOTH_CAPABILITY: Final = "Home Assistant 2026.7 public Bluetooth scanner cache API"
 
 SAMPLE_INTERVAL_SECONDS: Final = 0.25
 STALE_AFTER_SECONDS: Final = 10.0

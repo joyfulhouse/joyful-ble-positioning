@@ -5,15 +5,13 @@ from __future__ import annotations
 import asyncio
 import gc
 import importlib
-import importlib.util
 import inspect
 import math
-import sys
 import weakref
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from types import ModuleType, SimpleNamespace
+from types import SimpleNamespace
 from typing import Any, cast
 from uuid import UUID
 
@@ -25,16 +23,6 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.joyful_ble_positioning.const import MAX_SUBSCRIPTIONS
 from custom_components.joyful_ble_positioning.model import SubscriptionSpec, TrackerSpec
-
-# Home Assistant installs aiousbwatcher only on its Linux targets, while importing
-# the public Bluetooth API traverses the USB integration on macOS test hosts.
-if importlib.util.find_spec("aiousbwatcher") is None:
-    aiousbwatcher = ModuleType("aiousbwatcher")
-    aiousbwatcher.AIOUSBWatcher = type("AIOUSBWatcher", (), {})
-    aiousbwatcher.InotifyNotAvailableError = type("InotifyNotAvailableError", (Exception,), {})
-    sys.modules["aiousbwatcher"] = aiousbwatcher
-if "homeassistant.components.usb" not in sys.modules:
-    sys.modules["homeassistant.components.usb"] = ModuleType("homeassistant.components.usb")
 
 RUNTIME_MODULE = "custom_components.joyful_ble_positioning.runtime"
 TRACKER_ONE_ID = UUID("76a8b276-7e46-4a1a-a240-1b27c0c8f104")
@@ -513,17 +501,6 @@ def test_exact_wire_serialization_minimizes_observed_and_stale_events() -> None:
         "sequence": 2,
         "ageMs": 10_001,
     }
-
-
-def test_component_source_contains_no_private_bluetooth_api_strings() -> None:
-    source = inspect.getsource(_runtime_module())
-    forbidden_fragments = (
-        "_get_" + "manager",
-        "subscribe_" + "advertisements",
-        "discovered_devices_and_advertisement_data_" + "history",
-    )
-
-    assert not any(fragment in source for fragment in forbidden_fragments)
 
 
 @pytest.mark.parametrize(

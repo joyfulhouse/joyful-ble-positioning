@@ -44,3 +44,20 @@ def test_integration_has_no_home_assistant_platforms() -> None:
     platform_files = {f"{platform.value}.py" for platform in Platform}
     component_files = {path.name for path in COMPONENT_DIR.glob("*.py")}
     assert component_files.isdisjoint(platform_files)
+
+
+def test_component_source_contains_no_forbidden_private_or_stateful_contracts() -> None:
+    """Every runtime module stays on the narrow public, current-state API boundary."""
+    forbidden = {
+        "_get_manager",
+        "subscribe_advertisements",
+        ".storage",
+        "custom_components.bermuda",
+        "async_get_clientsession",
+        "discovered_devices_and_advertisement_data_history",
+    }
+    source = "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted(COMPONENT_DIR.rglob("*.py"))
+    )
+
+    assert all(fragment not in source for fragment in forbidden)

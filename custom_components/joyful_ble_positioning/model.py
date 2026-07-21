@@ -37,7 +37,7 @@ class SubscriptionValidationError(ValueError):
     """Raised when a subscription request fails closed validation."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, repr=False)
 class TrackerSpec:
     """One canonical tracker identity held only in subscription memory."""
 
@@ -46,7 +46,7 @@ class TrackerSpec:
     identity: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, repr=False)
 class SubscriptionSpec:
     """A bounded tracker and scanner-source allowlist."""
 
