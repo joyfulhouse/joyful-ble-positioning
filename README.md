@@ -4,6 +4,8 @@ Joyful BLE Positioning is a diagnostic, admin-only Home Assistant custom integra
 bounded current BLE observations from Home Assistant's public scanner cache. It is an observation
 bridge for an external indoor-positioning backend, not a positioning engine by itself.
 
+[![Built with Omnigent][omnigent-shield]][omnigent]
+
 ## Install with HACS
 
 This repository is a HACS custom repository; it is not listed in the default HACS store.
@@ -113,3 +115,14 @@ uv run pytest -q
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  <a href="https://github.com/omnigent-ai/omnigent"><img src="https://raw.githubusercontent.com/joyfulhouse/.github/main/assets/badges/built-with-omnigent.svg" alt="Built with Omnigent"></a>
+  <br>
+  <sub>Built with <a href="https://github.com/omnigent-ai/omnigent">Omnigent</a> — the open-source AI agent framework and meta-harness.</sub>
+</p>
+
+[omnigent-shield]: https://raw.githubusercontent.com/joyfulhouse/.github/main/assets/badges/built-with-omnigent.svg
+[omnigent]: https://github.com/omnigent-ai/omnigent
